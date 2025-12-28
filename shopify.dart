@@ -261,10 +261,10 @@ class HomeScreen extends StatelessWidget {
                     child: ListView(
                       scrollDirection: Axis.horizontal,
                       children: [
-                        _buildCategoryCard('Electronics', Icons.devices, Colors.blue),
-                        _buildCategoryCard('Fashion', Icons.checkroom, Colors.pink),
-                        _buildCategoryCard('Home', Icons.home, Colors.orange),
-                        _buildCategoryCard('Sports', Icons.sports_basketball, Colors.green),
+                        _buildCategoryCard(context, 'Electronics', Icons.devices, Colors.blue),
+                        _buildCategoryCard(context, 'Fashion', Icons.checkroom, Colors.pink),
+                        _buildCategoryCard(context, 'Home', Icons.home, Colors.orange),
+                        _buildCategoryCard(context, 'Sports', Icons.sports_basketball, Colors.green),
                       ],
                     ),
                   ),
@@ -315,25 +315,39 @@ class HomeScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildCategoryCard(String title, IconData icon, Color color) {
-    return Container(
-      width: 100,
-      margin: const EdgeInsets.only(right: 12),
-      decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: color.withOpacity(0.3)),
-      ),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(icon, color: color, size: 32),
-          const SizedBox(height: 8),
-          Text(
-            title,
-            style: TextStyle(color: color, fontWeight: FontWeight.bold),
+  Widget _buildCategoryCard(BuildContext context, String title, IconData icon, Color color) {
+    return GestureDetector(
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => CategoryProductsScreen(
+              category: title,
+              icon: icon,
+              color: color,
+            ),
           ),
-        ],
+        );
+      },
+      child: Container(
+        width: 100,
+        margin: const EdgeInsets.only(right: 12),
+        decoration: BoxDecoration(
+          color: color.withOpacity(0.1),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: color.withOpacity(0.3)),
+        ),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(icon, color: color, size: 32),
+            const SizedBox(height: 8),
+            Text(
+              title,
+              style: TextStyle(color: color, fontWeight: FontWeight.bold),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -835,16 +849,16 @@ class CategoriesScreen extends StatelessWidget {
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
-          _buildCategoryTile('Electronics', Icons.devices, Colors.blue, 3),
-          _buildCategoryTile('Fashion', Icons.checkroom, Colors.pink, 2),
-          _buildCategoryTile('Home', Icons.home, Colors.orange, 1),
-          _buildCategoryTile('Sports', Icons.sports_basketball, Colors.green, 0),
+          _buildCategoryTile(context, 'Electronics', Icons.devices, Colors.blue, 3),
+          _buildCategoryTile(context, 'Fashion', Icons.checkroom, Colors.pink, 2),
+          _buildCategoryTile(context, 'Home', Icons.home, Colors.orange, 1),
+          _buildCategoryTile(context, 'Sports', Icons.sports_basketball, Colors.green, 0),
         ],
       ),
     );
   }
 
-  Widget _buildCategoryTile(String title, IconData icon, Color color, int count) {
+  Widget _buildCategoryTile(BuildContext context, String title, IconData icon, Color color, int count) {
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
       child: ListTile(
@@ -862,6 +876,127 @@ class CategoriesScreen extends StatelessWidget {
         ),
         subtitle: Text('$count products'),
         trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+        onTap: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => CategoryProductsScreen(
+                category: title,
+                icon: icon,
+                color: color,
+              ),
+            ),
+          );
+        },
+      ),
+    );
+  }
+}
+
+// Category Products Screen
+class CategoryProductsScreen extends StatelessWidget {
+  final String category;
+  final IconData icon;
+  final Color color;
+
+  const CategoryProductsScreen({
+    Key? key,
+    required this.category,
+    required this.icon,
+    required this.color,
+  }) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    final categoryProducts = AppData.products
+        .where((product) => product.category == category)
+        .toList();
+
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(category),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.shopping_cart),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const CartScreen()),
+              );
+            },
+          ),
+        ],
+      ),
+      body: Column(
+        children: [
+          // Category Header
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(24),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [color.withOpacity(0.7), color],
+              ),
+            ),
+            child: Column(
+              children: [
+                Icon(icon, size: 64, color: Colors.white),
+                const SizedBox(height: 12),
+                Text(
+                  category,
+                  style: const TextStyle(
+                    fontSize: 28,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  '${categoryProducts.length} products available',
+                  style: const TextStyle(
+                    fontSize: 16,
+                    color: Colors.white70,
+                  ),
+                ),
+              ],
+            ),
+          ),
+
+          // Products Grid
+          Expanded(
+            child: categoryProducts.isEmpty
+                ? Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(Icons.inventory_2_outlined,
+                            size: 80, color: Colors.grey[400]),
+                        const SizedBox(height: 16),
+                        Text(
+                          'No products in this category yet',
+                          style: TextStyle(
+                            fontSize: 16,
+                            color: Colors.grey[600],
+                          ),
+                        ),
+                      ],
+                    ),
+                  )
+                : GridView.builder(
+                    padding: const EdgeInsets.all(16),
+                    gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                      crossAxisCount: 2,
+                      childAspectRatio: 0.75,
+                      crossAxisSpacing: 12,
+                      mainAxisSpacing: 12,
+                    ),
+                    itemCount: categoryProducts.length,
+                    itemBuilder: (context, index) {
+                      return ProductCard(product: categoryProducts[index]);
+                    },
+                  ),
+          ),
+        ],
       ),
     );
   }
@@ -939,18 +1074,65 @@ class ProfileScreen extends StatelessWidget {
             style: TextStyle(color: Colors.grey),
           ),
           const SizedBox(height: 32),
-          _buildMenuTile(Icons.shopping_bag, 'My Orders', () {}),
-          _buildMenuTile(Icons.location_on, 'Shipping Address', () {}),
-          _buildMenuTile(Icons.payment, 'Payment Methods', () {}),
-          _buildMenuTile(Icons.settings, 'Settings', () {}),
-          _buildMenuTile(Icons.help, 'Help & Support', () {}),
-          _buildMenuTile(Icons.logout, 'Logout', () {}),
+          _buildMenuTile(context, Icons.shopping_bag, 'My Orders', () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => const MyOrdersScreen()),
+            );
+          }),
+          _buildMenuTile(context, Icons.location_on, 'Shipping Address', () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => const ShippingAddressScreen()),
+            );
+          }),
+          _buildMenuTile(context, Icons.payment, 'Payment Methods', () {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('Payment Methods - Coming Soon!')),
+            );
+          }),
+          _buildMenuTile(context, Icons.settings, 'Settings', () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => const SettingsScreen()),
+            );
+          }),
+          _buildMenuTile(context, Icons.help, 'Help & Support', () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => const HelpSupportScreen()),
+            );
+          }),
+          _buildMenuTile(context, Icons.logout, 'Logout', () {
+            showDialog(
+              context: context,
+              builder: (context) => AlertDialog(
+                title: const Text('Logout'),
+                content: const Text('Are you sure you want to logout?'),
+                actions: [
+                  TextButton(
+                    onPressed: () => Navigator.pop(context),
+                    child: const Text('Cancel'),
+                  ),
+                  TextButton(
+                    onPressed: () {
+                      Navigator.pop(context);
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('Logged out successfully')),
+                      );
+                    },
+                    child: const Text('Logout'),
+                  ),
+                ],
+              ),
+            );
+          }),
         ],
       ),
     );
   }
 
-  Widget _buildMenuTile(IconData icon, String title, VoidCallback onTap) {
+  Widget _buildMenuTile(BuildContext context, IconData icon, String title, VoidCallback onTap) {
     return Card(
       margin: const EdgeInsets.only(bottom: 8),
       child: ListTile(
@@ -958,6 +1140,571 @@ class ProfileScreen extends StatelessWidget {
         title: Text(title),
         trailing: const Icon(Icons.arrow_forward_ios, size: 16),
         onTap: onTap,
+      ),
+    );
+  }
+}
+
+// My Orders Screen
+class MyOrdersScreen extends StatelessWidget {
+  const MyOrdersScreen({Key? key}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    final orders = [
+      {
+        'id': '#ORD-2025-001',
+        'date': 'Dec 25, 2025',
+        'items': 3,
+        'total': 219.97,
+        'status': 'Delivered',
+        'color': Colors.green,
+      },
+      {
+        'id': '#ORD-2025-002',
+        'date': 'Dec 26, 2025',
+        'items': 1,
+        'total': 89.99,
+        'status': 'Shipped',
+        'color': Colors.blue,
+      },
+      {
+        'id': '#ORD-2025-003',
+        'date': 'Dec 27, 2025',
+        'items': 2,
+        'total': 169.98,
+        'status': 'Processing',
+        'color': Colors.orange,
+      },
+    ];
+
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('My Orders'),
+      ),
+      body: ListView.builder(
+        padding: const EdgeInsets.all(16),
+        itemCount: orders.length,
+        itemBuilder: (context, index) {
+          final order = orders[index];
+          return Card(
+            margin: const EdgeInsets.only(bottom: 16),
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        order['id'] as String,
+                        style: const TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16,
+                        ),
+                      ),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                        decoration: BoxDecoration(
+                          color: (order['color'] as Color).withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        child: Text(
+                          order['status'] as String,
+                          style: TextStyle(
+                            color: order['color'] as Color,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 12,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                  Row(
+                    children: [
+                      Icon(Icons.calendar_today, size: 16, color: Colors.grey[600]),
+                      const SizedBox(width: 8),
+                      Text(
+                        order['date'] as String,
+                        style: TextStyle(color: Colors.grey[600]),
+                      ),
+                      const SizedBox(width: 24),
+                      Icon(Icons.shopping_bag, size: 16, color: Colors.grey[600]),
+                      const SizedBox(width: 8),
+                      Text(
+                        '${order['items']} items',
+                        style: TextStyle(color: Colors.grey[600]),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        'Total: \$${(order['total'] as double).toStringAsFixed(2)}',
+                        style: const TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.deepPurple,
+                        ),
+                      ),
+                      TextButton(
+                        onPressed: () {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(content: Text('Viewing order ${order['id']}')),
+                          );
+                        },
+                        child: const Text('View Details'),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          );
+        },
+      ),
+    );
+  }
+}
+
+// Shipping Address Screen
+class ShippingAddressScreen extends StatefulWidget {
+  const ShippingAddressScreen({Key? key}) : super(key: key);
+
+  @override
+  State<ShippingAddressScreen> createState() => _ShippingAddressScreenState();
+}
+
+class _ShippingAddressScreenState extends State<ShippingAddressScreen> {
+  int selectedAddress = 0;
+
+  final addresses = [
+    {
+      'name': 'Home',
+      'address': '123 Main Street, Apt 4B',
+      'city': 'New York, NY 10001',
+      'phone': '+1 (555) 123-4567',
+    },
+    {
+      'name': 'Office',
+      'address': '456 Business Ave, Suite 200',
+      'city': 'New York, NY 10002',
+      'phone': '+1 (555) 987-6543',
+    },
+  ];
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Shipping Address'),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.add),
+            onPressed: () {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('Add new address - Coming Soon!')),
+              );
+            },
+          ),
+        ],
+      ),
+      body: ListView.builder(
+        padding: const EdgeInsets.all(16),
+        itemCount: addresses.length,
+        itemBuilder: (context, index) {
+          final address = addresses[index];
+          return Card(
+            margin: const EdgeInsets.only(bottom: 16),
+            child: InkWell(
+              onTap: () {
+                setState(() {
+                  selectedAddress = index;
+                });
+              },
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: Row(
+                  children: [
+                    Radio<int>(
+                      value: index,
+                      groupValue: selectedAddress,
+                      onChanged: (value) {
+                        setState(() {
+                          selectedAddress = value!;
+                        });
+                      },
+                      activeColor: Colors.deepPurple,
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              Text(
+                                address['name'] as String,
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 16,
+                                ),
+                              ),
+                              if (selectedAddress == index) ...[
+                                const SizedBox(width: 8),
+                                Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 8,
+                                    vertical: 2,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: Colors.deepPurple,
+                                    borderRadius: BorderRadius.circular(4),
+                                  ),
+                                  child: const Text(
+                                    'Default',
+                                    style: TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 10,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ],
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            address['address'] as String,
+                            style: TextStyle(color: Colors.grey[700]),
+                          ),
+                          Text(
+                            address['city'] as String,
+                            style: TextStyle(color: Colors.grey[700]),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            address['phone'] as String,
+                            style: TextStyle(color: Colors.grey[600], fontSize: 12),
+                          ),
+                        ],
+                      ),
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.edit, color: Colors.deepPurple),
+                      onPressed: () {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text('Edit address - Coming Soon!')),
+                        );
+                      },
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          );
+        },
+      ),
+    );
+  }
+}
+
+// Settings Screen
+class SettingsScreen extends StatefulWidget {
+  const SettingsScreen({Key? key}) : super(key: key);
+
+  @override
+  State<SettingsScreen> createState() => _SettingsScreenState();
+}
+
+class _SettingsScreenState extends State<SettingsScreen> {
+  bool notifications = true;
+  bool darkMode = false;
+  bool emailUpdates = true;
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Settings'),
+      ),
+      body: ListView(
+        children: [
+          const Padding(
+            padding: EdgeInsets.all(16),
+            child: Text(
+              'General',
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+                color: Colors.deepPurple,
+              ),
+            ),
+          ),
+          SwitchListTile(
+            title: const Text('Push Notifications'),
+            subtitle: const Text('Receive notifications about orders and offers'),
+            value: notifications,
+            onChanged: (value) {
+              setState(() {
+                notifications = value;
+              });
+            },
+            activeColor: Colors.deepPurple,
+          ),
+          SwitchListTile(
+            title: const Text('Dark Mode'),
+            subtitle: const Text('Enable dark theme'),
+            value: darkMode,
+            onChanged: (value) {
+              setState(() {
+                darkMode = value;
+              });
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('Dark mode - Coming Soon!')),
+              );
+            },
+            activeColor: Colors.deepPurple,
+          ),
+          SwitchListTile(
+            title: const Text('Email Updates'),
+            subtitle: const Text('Receive promotional emails'),
+            value: emailUpdates,
+            onChanged: (value) {
+              setState(() {
+                emailUpdates = value;
+              });
+            },
+            activeColor: Colors.deepPurple,
+          ),
+          const Divider(),
+          const Padding(
+            padding: EdgeInsets.all(16),
+            child: Text(
+              'Account',
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+                color: Colors.deepPurple,
+              ),
+            ),
+          ),
+          ListTile(
+            leading: const Icon(Icons.person, color: Colors.deepPurple),
+            title: const Text('Edit Profile'),
+            trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+            onTap: () {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('Edit Profile - Coming Soon!')),
+              );
+            },
+          ),
+          ListTile(
+            leading: const Icon(Icons.lock, color: Colors.deepPurple),
+            title: const Text('Change Password'),
+            trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+            onTap: () {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('Change Password - Coming Soon!')),
+              );
+            },
+          ),
+          ListTile(
+            leading: const Icon(Icons.language, color: Colors.deepPurple),
+            title: const Text('Language'),
+            subtitle: const Text('English'),
+            trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+            onTap: () {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('Language Selection - Coming Soon!')),
+              );
+            },
+          ),
+          const Divider(),
+          const Padding(
+            padding: EdgeInsets.all(16),
+            child: Text(
+              'About',
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+                color: Colors.deepPurple,
+              ),
+            ),
+          ),
+          ListTile(
+            leading: const Icon(Icons.info, color: Colors.deepPurple),
+            title: const Text('App Version'),
+            subtitle: const Text('1.0.0'),
+          ),
+          ListTile(
+            leading: const Icon(Icons.privacy_tip, color: Colors.deepPurple),
+            title: const Text('Privacy Policy'),
+            trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+            onTap: () {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('Privacy Policy - Coming Soon!')),
+              );
+            },
+          ),
+          ListTile(
+            leading: const Icon(Icons.description, color: Colors.deepPurple),
+            title: const Text('Terms & Conditions'),
+            trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+            onTap: () {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('Terms & Conditions - Coming Soon!')),
+              );
+            },
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// Help & Support Screen
+class HelpSupportScreen extends StatelessWidget {
+  const HelpSupportScreen({Key? key}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Help & Support'),
+      ),
+      body: ListView(
+        padding: const EdgeInsets.all(16),
+        children: [
+          // Contact Cards
+          Card(
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                children: [
+                  const Icon(Icons.headset_mic, size: 64, color: Colors.deepPurple),
+                  const SizedBox(height: 16),
+                  const Text(
+                    'How can we help you?',
+                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    'Our support team is available 24/7',
+                    style: TextStyle(color: Colors.grey[600]),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          const SizedBox(height: 24),
+          
+          // Contact Options
+          _buildContactOption(
+            context,
+            Icons.phone,
+            'Call Us',
+            '+1 (555) 123-4567',
+            Colors.green,
+          ),
+          _buildContactOption(
+            context,
+            Icons.email,
+            'Email Us',
+            'support@shophub.com',
+            Colors.blue,
+          ),
+          _buildContactOption(
+            context,
+            Icons.chat,
+            'Live Chat',
+            'Chat with our support team',
+            Colors.orange,
+          ),
+          
+          const SizedBox(height: 24),
+          const Text(
+            'Frequently Asked Questions',
+            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+          ),
+          const SizedBox(height: 12),
+          
+          // FAQs
+          _buildFAQItem(
+            'How do I track my order?',
+            'Go to My Orders and click on your order to see tracking details.',
+          ),
+          _buildFAQItem(
+            'What is your return policy?',
+            'You can return items within 30 days of delivery for a full refund.',
+          ),
+          _buildFAQItem(
+            'How long does shipping take?',
+            'Standard shipping takes 3-5 business days. Express shipping is 1-2 days.',
+          ),
+          _buildFAQItem(
+            'How do I cancel an order?',
+            'You can cancel an order within 1 hour of placing it from My Orders.',
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildContactOption(
+    BuildContext context,
+    IconData icon,
+    String title,
+    String subtitle,
+    Color color,
+  ) {
+    return Card(
+      margin: const EdgeInsets.only(bottom: 12),
+      child: ListTile(
+        leading: Container(
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            color: color.withOpacity(0.1),
+            shape: BoxShape.circle,
+          ),
+          child: Icon(icon, color: color),
+        ),
+        title: Text(
+          title,
+          style: const TextStyle(fontWeight: FontWeight.bold),
+        ),
+        subtitle: Text(subtitle),
+        trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+        onTap: () {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Opening $title...')),
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _buildFAQItem(String question, String answer) {
+    return Card(
+      margin: const EdgeInsets.only(bottom: 12),
+      child: ExpansionTile(
+        title: Text(
+          question,
+          style: const TextStyle(fontWeight: FontWeight.w600),
+        ),
+        children: [
+          Padding(
+            padding: const EdgeInsets.all(16),
+            child: Text(
+              answer,
+              style: TextStyle(color: Colors.grey[700], height: 1.5),
+            ),
+          ),
+        ],
       ),
     );
   }
