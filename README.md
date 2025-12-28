@@ -73,6 +73,9 @@ shopify/
 5. **Product Detail Screen** - Detailed product information
 6. **Cart Screen** - Shopping cart and checkout
 
+   
+<img width="467" height="395" alt="Screenshot 2025-12-28 204125" src="https://github.com/user-attachments/assets/77ae250e-b9ce-46dc-aad1-2091dfc5f39f" />
+
 ## 💡 Features in Detail
 
 ### Product Management
